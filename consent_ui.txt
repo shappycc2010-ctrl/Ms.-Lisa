@@ -1,0 +1,3 @@
+Initial consent sample:
+Title: Shappy Assistant — Permissions
+Body: To help you manage calls, messages, and reminders, Shappy needs access to microphone, contacts, and notifications. Recording other people's calls or conversations is OFF by default. You control everything — enable features in Settings and revoke anytime.

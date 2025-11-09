@@ -1,0 +1,21 @@
+Shappy Secretary — Privacy & Consent (in-app)
+
+Short summary:
+Shappy Secretary assists you with calls, messages, reminders, and daily organization. The assistant stores sensitive data locally and only performs sensitive actions when you explicitly allow them.
+
+What data we may access and why:
+- Microphone: to detect the wake word and process voice commands. Audio is processed locally wherever possible.
+- Voiceprint (optional): stored encrypted on your device to verify it's you.
+- Contacts & Call state: to identify callers and provide call screening.
+- Notifications: to read and triage incoming notifications and e-mails.
+- Calendar & Email: only with your explicit OAuth consent.
+- Recordings: disabled by default. If enabled, visible indicators are shown and consent is required.
+
+Your controls:
+- Toggle voiceprint training on/off; retrain or delete at any time.
+- Toggle call recording (defaults off). App requires you to confirm legal consent.
+- Revoke all permissions with the “Revoke & Clear Data” action.
+- Export logs in encrypted format.
+
+Legal note:
+You are responsible for complying with local laws about call recording and conversation monitoring.
