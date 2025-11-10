@@ -15,3 +15,8 @@
   "role": "The Boss",
   "authority": "Full — Lisa obeys only him."
 }
+val json = assets.open("LisaProfile.json").bufferedReader().use { it.readText() }
+val lisa = JSONObject(json)
+val rules = lisa.getJSONObject("boss_rules")
+val greeting = "Hello Shappy, I'm ready to follow your rules: ${rules.getString("1")}"
+tts.speak(greeting, TextToSpeech.QUEUE_FLUSH, null, null)
