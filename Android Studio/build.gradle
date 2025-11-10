@@ -1,0 +1,8 @@
+implementation 'com.google.android.gms:play-services-speech:21.0.1'
+implementation 'androidx.speech:speech-recognition:1.0.0'
+val tts = TextToSpeech(this) { status ->
+    if (status == TextToSpeech.SUCCESS) {
+        tts.language = Locale.UK
+        tts.speak("Good morning, Shappy. I'm Lisa, your secretary.", TextToSpeech.QUEUE_FLUSH, null, null)
+    }
+}
