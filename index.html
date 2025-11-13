@@ -6,102 +6,163 @@
   <title>Ms. Lisa – Shappy’s Smart Assistant</title>
   <style>
     body {
-      background: linear-gradient(135deg, #0a0a0a, #1b1b2f);
+      background-color: #0f111a;
       color: white;
       font-family: 'Poppins', sans-serif;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
-      text-align: center;
+      margin: 0;
+      overflow: hidden;
     }
-    h1 {
-      font-size: 2.5em;
-      color: #00e6b8;
-    }
-    .chat-box {
+
+    .container {
       width: 90%;
       max-width: 500px;
-      height: 60vh;
-      background: rgba(255,255,255,0.05);
-      border-radius: 15px;
-      overflow-y: auto;
+      background: #151822;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
       padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 15px rgba(0, 230, 184, 0.2);
+      height: 80vh;
+      justify-content: space-between;
     }
+
+    h1 {
+      text-align: center;
+      color: #00fff2;
+      font-weight: bold;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    h1 span {
+      color: pink;
+      font-size: 1.2em;
+    }
+
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      background: #0f111a;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .message {
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+
+    .user {
+      text-align: right;
+      color: #00fff2;
+    }
+
+    .lisa {
+      text-align: left;
+      color: #ffb6c1;
+    }
+
     .input-area {
       display: flex;
-      width: 90%;
-      max-width: 500px;
+      gap: 8px;
     }
+
     input {
       flex: 1;
       padding: 10px;
       border: none;
-      border-radius: 10px 0 0 10px;
+      border-radius: 20px;
       outline: none;
+      background: #1d2130;
+      color: white;
+      font-size: 1em;
     }
+
     button {
-      background: #00e6b8;
+      background: #00fff2;
       border: none;
       color: black;
-      padding: 10px 20px;
-      border-radius: 0 10px 10px 0;
-      cursor: pointer;
       font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #00bfb3;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #00fff2;
+      border-radius: 3px;
     }
   </style>
 </head>
 <body>
-  <h1>🌸 Ms. Lisa</h1>
-  <p>Hello Shappy, I’m always ready to assist 💼</p>
-  <div class="chat-box" id="chatBox"></div>
-  <div class="input-area">
-    <input id="userInput" type="text" placeholder="Talk to Lisa..." />
-    <button onclick="sendMessage()">Send</button>
+  <div class="container">
+    <h1><span>🌸</span> Ms. Lisa</h1>
+    <div id="chat-box">
+      <div class="message lisa">Hello Shappy, I’m always ready to assist 💼</div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Talk to Lisa..." />
+      <button id="send-btn">Send</button>
+    </div>
   </div>
 
   <script>
-    const LISA_SERVER_URL = "https://your-render-url.onrender.com"; // 🔗 Replace with your real backend URL
-    const chatBox = document.getElementById("chatBox");
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
 
-    function addMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.innerHTML = `<b>${sender}:</b> ${text}`;
-      msg.style.margin = "8px 0";
+    function appendMessage(sender, text) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.innerText = text;
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
     async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const message = input.value.trim();
-      if (!message) return;
-      addMessage("You", message);
-      input.value = "";
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      appendMessage('user', userMessage);
+      input.value = '';
 
       try {
-        const response = await fetch(`${LISA_SERVER_URL}/chat`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: message }),
+        const res = await fetch('https://ms-lisa.onrender.com/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage })
         });
-        const data = await response.json();
-        addMessage("Lisa", data.reply || "I'm thinking...");
+
+        if (!res.ok) throw new Error('Server error');
+
+        const data = await res.json();
+        appendMessage('lisa', data.reply || 'Hmm… no response yet.');
       } catch (err) {
-        addMessage("Lisa", "⚠️ Connection issue, Shappy.");
+        appendMessage('lisa', '⚠️ Connection issue, Shappy.');
       }
     }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
   </script>
 </body>
-  </html>
-<button onclick="speak('Hello Shappy 💼, Lisa here and fully online!')">Test Voice</button>
-<script>
-  function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    speechSynthesis.speak(utterance);
-  }
-</script>
+</html>
