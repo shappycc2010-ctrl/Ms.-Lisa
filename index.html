@@ -97,3 +97,11 @@
   </script>
 </body>
   </html>
+<button onclick="speak('Hello Shappy 💼, Lisa here and fully online!')">Test Voice</button>
+<script>
+  function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    speechSynthesis.speak(utterance);
+  }
+</script>
