@@ -1,56 +1,62 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
+import { OpenAI } from 'openai';
+
+dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
-app.use(session({ secret: process.env.SESSION_SECRET || 'dev', resave:false, saveUninitialized:true }));
 
-app.get('/auth/url', (req, res) => {
-  const redirect = process.env.REDIRECT_URI;
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const scope = encodeURIComponent('openid profile email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.events.readonly');
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirect)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-  res.json({ url });
+const openaiApiKey = process.env.OPENAI_API_KEY;
+if (!openaiApiKey) {
+  console.warn('WARNING: OPENAI_API_KEY is not set. Set it in your environment before starting the server.');
+}
+const client = new OpenAI({ apiKey: openaiApiKey });
+
+// simple health route
+app.get('/', (req, res) => {
+  res.send('Ms. Lisa GPT backend is online ✅');
 });
 
-app.post('/auth/exchange', async (req, res) => {
-  const { code } = req.body;
-  const tokenUrl = 'https://oauth2.googleapis.com/token';
-  const params = new URLSearchParams();
-  params.append('code', code);
-  params.append('client_id', process.env.GOOGLE_CLIENT_ID);
-  params.append('client_secret', process.env.GOOGLE_CLIENT_SECRET);
-  params.append('redirect_uri', process.env.REDIRECT_URI);
-  params.append('grant_type', 'authorization_code');
+// Chat endpoint - expects { message: "text" }
+app.post('/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Please send { message: "your text" } in JSON body.' });
+    }
 
-  const r = await fetch(tokenUrl, { method:'POST', body: params });
-  const tokens = await r.json();
-  req.session.tokens = tokens;
-  res.json({ ok: true });
+    // Minimal system prompt to make Lisa behave as Shappy's charming secretary
+    const systemPrompt = `You are Ms. Lisa, a charming, intelligent personal and work assistant for Shappy (also called Bolu).
+You always address him respectfully as "Shappy" or "Bolu". Keep replies concise, helpful, and occasionally playful when appropriate.
+Follow his rules: do not initiate any transaction, ask for confirmation for sensitive actions, and prioritize privacy.
+When you don't know something, ask a clarifying question.`;
+
+    const resp = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      max_tokens: 500,
+      temperature: 0.2
+    });
+
+    const reply = resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content
+      ? resp.choices[0].message.content
+      : 'Sorry, I could not generate a reply right now.';
+
+    res.json({ reply });
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message || err.toString() });
+  }
 });
 
-app.get('/gmail/messages', async (req, res) => {
-  const tokens = req.session.tokens;
-  if (!tokens) return res.status(401).json({ error: 'not authorized' });
-  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=5', {
-    headers: { Authorization: `Bearer ${tokens.access_token}` }
-  });
-  const data = await r.json();
-  res.json(data);
-});
-
-app.listen(3000, () => console.log('Server running on :3000'));
-app.post("/chat", async (req, res) => {
-  const { text } = req.body;
-  console.log(`🗣️ Shappy said: ${text}`);
-
-  let reply = "I'm here, Shappy 💼";
-  if (text.toLowerCase().includes("hello")) reply = "Hello boss Shappy 👋";
-  if (text.toLowerCase().includes("mail")) reply = "Would you like me to check your Gmail?";
-  if (text.toLowerCase().includes("remind")) reply = "Sure! What should I remind you about?";
-  
-  res.json({ reply });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Ms. Lisa GPT backend listening on port ${PORT}`);
 });
